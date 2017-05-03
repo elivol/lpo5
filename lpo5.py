@@ -2,6 +2,7 @@ import os.path as os
 import re
 import pymorphy2
 import gram
+from random import randint
 
 string = "Лучше приходи всегда в один и тот же час,  - попросил Лис."
 string1 = "Сражение выигрывает тот, кто твердо решил его выиграть! "
@@ -19,9 +20,33 @@ def get_seps(input):
 
 
 # Парсер словаря синонимов
-def syn_parser():
+def syn_parser(nf_and_word):
     file = open(os.abspath('synmaster.txt'), 'r').readlines()
 
+    # Словарь для найденных синонимов (ключ=синоним, значение=слово)
+    d_synonym = {}
+
+    for key in nf_and_word.keys():
+        if len(nf_and_word[key]) > 1:
+
+            for line in file:
+                # Разбиваем строку по разделителю '|'
+                lines = str(line).split('|')
+                # Ищем совпадения в строке с текущим словом
+                if key in lines:
+                    # Совпадение есть, выбираем синоним
+                    i = lines.index(key)
+                    syn_i = randint(0, len(lines)-1)
+
+                    while syn_i == i:
+                        syn_i = randint(0, len(lines)-1)
+
+                    synonym = lines[syn_i].strip()
+                    word = nf_and_word[key]
+                    d_synonym[synonym] = word
+                    break
+
+    return d_synonym
 
 
 # Функция, проводящая частотный анализ
@@ -50,6 +75,10 @@ def synonymizer(input):
             nf_set.add(nf)
             nf_and_word[nf] = [el]
 
+    # Парсинг словаря синонимов
+    d_synonym = syn_parser(nf_and_word)
+
+    print(d_synonym.keys())
 
 
 
