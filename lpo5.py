@@ -7,7 +7,7 @@ from random import randint
 string = "Купец купцу конкурент"
 string1 = "Маша, Маша растеряша"
 string2 = "Идти далеко - не значит идти долго!"
-string3 = "Трусливый друг страшнее врага, ибо врага опасаешься, а на друга надеешься"
+string3 = "Трусливый друг страшнее врага, ибо врага опасаешься, а на друга надеешься."
 
 # Функция разбиения строки на слова
 def get_tokens(input):
@@ -113,6 +113,21 @@ def synonymizer(input):
                     words[i] = key
                 # Глаголу - aspect, mood, person, tense, transitivity
 
-    return words
+    # Формирование строки - результата
+    res = ''
+    if seps[0]:
+        res += seps[0]
+        seps.pop(0)
+    else:
+        seps.pop(0)
 
-print(synonymizer(string4))
+    for i in range(max(len(words), len(seps))):
+        if i == 0:
+            words[i] = words[i].title()
+        if i < len(words):
+            res += words[i]
+        if i < len(seps):
+            res += seps[i]
+    return res
+
+print(synonymizer(string3))
