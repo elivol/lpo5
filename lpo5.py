@@ -4,11 +4,10 @@ import pymorphy2
 import gram
 from random import randint
 
-string = "Лучше приходи всегда в один и тот же час,  - попросил Лис."
-string1 = "Сражение выигрывает тот, кто твердо решил его выиграть! "
-string2 = "Солнце ушло, однако, как сказала Маша, на улице жарко, как в полдень"
-string3 = "Рыбак рыбака видит издалека"
-
+string = "Купец купцу конкурент"
+string1 = "Маша, Маша растеряша"
+string2 = "Идти далеко - не значит идти долго!"
+string3 = "Трусливый друг страшнее врага, ибо врага опасаешься, а на друга надеешься"
 
 # Функция разбиения строки на слова
 def get_tokens(input):
@@ -34,12 +33,18 @@ def syn_parser(nf_and_word):
                 lines = str(line).split('|')
                 # Ищем совпадения в строке с текущим словом
                 if key in lines:
-                    # Совпадение есть, выбираем синоним
+                    # Совпадение есть, выбираем синоним, если ни у одного нет пробела
+                    space = [True for el in lines if el.isalpha()]
+                    if True not in space:
+                        break
+
                     i = lines.index(key)
                     syn_i = randint(0, len(lines)-1)
 
-                    while syn_i == i:
+                    while syn_i == i or not lines[syn_i].isalpha():
                         syn_i = randint(0, len(lines)-1)
+                        if not lines[syn_i].isalpha():
+                            syn_i = randint(0, len(lines) - 1)
 
                     synonym = lines[syn_i].strip()
                     word = nf_and_word[key]
@@ -54,6 +59,9 @@ def synonymizer(input):
     # Раздаление строки на слова и разделители
     words = get_tokens(input)
     seps = get_seps(input)
+
+    # Слова в нижний регистр
+    words = [el.lower() for el in words]
 
     # Морфологический анализ слов
     morph = pymorphy2.MorphAnalyzer()
@@ -78,10 +86,33 @@ def synonymizer(input):
     # Парсинг словаря синонимов
     d_synonym = syn_parser(nf_and_word)
 
-    print(d_synonym.keys())
+    h = morph.parse('агена')[0]
+    h = h.inflect({'gent','sing'})
 
+    # Вставка синонимов в исходную строку
+    for key in d_synonym.keys():
+        for el in d_synonym[key]:
+            if el.word in words:
+                i = words.index(el.word)
+                if el.word != el.normal_form:
+                    key_morph = morph.parse(key)[0]
 
+                    if el.tag.POS == 'VERB':
+                        words[i] = key_morph.inflect(
+                            {el.tag.aspect, el.tag.tense, el.tag.number, el.tag.gender}).word
 
-    return for_synonymize
+                    elif el.tag.POS == 'INFN':
+                        words[i] = key_morph.inflect({el.tag.aspect, el.tag.transitivity}).word
 
-print(synonymizer(string3))
+                    elif el.tag.POS == 'ADJF' or el.tag.POS == 'ADJS':
+                        words[i] = key_morph.inflect({el.tag.gender, el.tag.case, el.tag.number}).word
+
+                    else:
+                        words[i] = key_morph.inflect({el.tag.case, el.tag.number}).word
+                else:
+                    words[i] = key
+                # Глаголу - aspect, mood, person, tense, transitivity
+
+    return words
+
+print(synonymizer(string4))
